@@ -7,6 +7,7 @@ import shutil
 from PIL import Image
 import numpy as np
 from numpy import asarray
+import numpy.testing as npt
 import albumentations as A
 
 
@@ -19,7 +20,6 @@ class TestGeneratorUtils(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree('fake_dataset')
-
 
     def test__pick_at_intervals__when_max_equals_list_length(self):
         expected = [1, 2, 3, 4]
@@ -36,20 +36,34 @@ class TestGeneratorUtils(TestCase):
 
     def test__get_sample_images(self):
         sample_path = Path('fake_dataset/1')
-        expected = [Path('fake_dataset/1/1.png'),
-                    Path('fake_dataset/1/2.png'),
-                    Path('fake_dataset/1/3.png'),
-                    Path('fake_dataset/1/4.png'),
-                    Path('fake_dataset/1/5.png')]
+        expected = np.array([
+            Path('fake_dataset/1/1.png'),
+            Path('fake_dataset/1/2.png'),
+            Path('fake_dataset/1/3.png'),
+            Path('fake_dataset/1/4.png'),
+            Path('fake_dataset/1/5.png')])
         actual = GeneratorUtils.get_sample_images(sample_path)
 
-        self.assertEqual(expected, actual)
+        npt.assert_equal(actual, expected)
 
-    def test__img_to_array(self):
+    def test__process_img__resizes_img(self):
         img_path = Path('fake_dataset/1/1.png')
-        expected = asarray(Image.open(img_path))
-        actual = GeneratorUtils.img_to_array(img_path)
-        self.assertTrue(np.array_equal(expected, actual))
+        img = GeneratorUtils.process_img(img_path, (10, 10))
+
+        self.assertEqual((10, 10), img.shape[:2])
+
+    def test__process_img__converts_img_to_numpy_array(self):
+        img_path = Path('fake_dataset/1/1.png')
+        img = GeneratorUtils.process_img(img_path, (10, 10))
+
+        self.assertIsInstance(img, np.ndarray)
+
+    def test__augment_imgs__returns_numpy_array(self):
+        imgs = GeneratorUtils.get_sample_images(Path('fake_dataset/1'))
+        imgs = [GeneratorUtils.process_img(img) for img in imgs]
+        augmented_imgs = GeneratorUtils.augment(imgs, [A.HorizontalFlip()])
+
+        self.assertIsInstance(augmented_imgs, np.ndarray)
 
     def test__augment_imgs__transforms_imgs(self):
         sample_path = Path('fake_dataset/1')
@@ -63,11 +77,11 @@ class TestGeneratorUtils(TestCase):
 
         actual = GeneratorUtils.augment(imgs, transformations)
 
-        self.assertTrue(np.array_equal(expected['image'], actual[0]))
-        self.assertTrue(np.array_equal(expected['image0'], actual[1]))
-        self.assertTrue(np.array_equal(expected['image1'], actual[2]))
-        self.assertTrue(np.array_equal(expected['image2'], actual[3]))
-        self.assertTrue(np.array_equal(expected['image3'], actual[4]))
+        npt.assert_equal(expected['image'], actual[0])
+        npt.assert_equal(expected['image0'], actual[1])
+        npt.assert_equal(expected['image1'], actual[2])
+        npt.assert_equal(expected['image2'], actual[3])
+        npt.assert_equal(expected['image3'], actual[4])
 
     def test__augment_imgs__maintains_order(self):
         sample_path = Path('fake_dataset/1')

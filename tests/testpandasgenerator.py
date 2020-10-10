@@ -3,13 +3,18 @@ from pandasgenerator import PandasGenerator
 import pandas as pd
 from pathlib import Path
 import shutil
+import albumentations as A
+from generatorutils import GeneratorUtils
+import numpy as np
+import numpy.testing as npt
 
 
 class TestPandasGenerator(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        generate_fake_dataset(Path('fake_dataset'),
-                              pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']]))
+        cls.data_path = Path('fake_dataset')
+        cls.source = pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']])
+        generate_fake_dataset(cls.data_path, cls.source)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -23,34 +28,34 @@ class TestPandasGenerator(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             PandasGenerator(pd.DataFrame([]), Path('non existent'))
 
-    def test_samples_generated_correctly(self):
-        data = pd.DataFrame([[1, 'a'],
-                             [2, 'b'],
-                             [3, 'c']])
-        gen = PandasGenerator(data, Path('images'))
+    """
+    More tests for PandasGenerator
 
-        expected = [[Path('images/1'), 'a'],
-                    [Path('images/2'), 'b'],
-                    [Path('images/3'), 'c']]
+    Improve the test below.
+    """
+    def test__pandas_generator__yields_correctly(self):
+        transformations = [A.HorizontalFlip(p=1)]
+        nb_frames = 5
+        batch_size = 1
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              batch_size=batch_size,
+                              nb_frames=nb_frames,
+                              transformations=transformations)
 
-        self.assertEqual(expected, gen.samples)
+        expected = []
+        for i in range(1, batch_size + 1):
+            imgs = GeneratorUtils.get_sample_images(Path(f'fake_dataset/{i}'))
+            imgs = GeneratorUtils.pick_at_intervals(imgs, nb_frames)
+            imgs = [GeneratorUtils.process_img(img_path)
+                    for img_path in imgs]
+            imgs = GeneratorUtils.augment(imgs, transformations)
+            expected.append(imgs)
+        expected = np.stack(expected)
 
-    def test_get_images(self):
-        sample = Path('fake_dataset/1')
-        expected_sample_imgs = [sample for sample in sample.iterdir()]
-        actual_sample_imgs = PandasGenerator.get_images(sample, 3)
-        self.assertCountEqual(expected_sample_imgs, actual_sample_imgs)
-
-    def test_pick_at_intervals(self):
-        picked = PandasGenerator.pick_at_intervals(list(range(5)), 5)
-        self.assertEqual(list(range(5)), picked)
-
-        picked = PandasGenerator.pick_at_intervals([1, 2, 3, 4], 3)
-        self.assertEqual([1, 2, 4], picked)
-
-        picked = PandasGenerator.pick_at_intervals([1, 2, 3, 4, 5, 6], 3)
-
-
+        for sample, _ in gen:
+            npt.assert_equal(actual=sample, desired=expected)
+            break
 
 
 
