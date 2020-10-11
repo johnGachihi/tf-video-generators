@@ -9,21 +9,24 @@ import numpy as np
 from numpy import asarray
 import numpy.testing as npt
 import albumentations as A
+from tensorflow.keras.utils import to_categorical
+
 
 
 class TestGeneratorUtils(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        generate_fake_dataset(Path('fake_dataset'),
-                              pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']]))
+        cls.data_path = Path('fake_dataset')
+        cls.source = pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']])
+        generate_fake_dataset(cls.data_path, cls.source)
 
     @classmethod
     def tearDownClass(cls) -> None:
-        shutil.rmtree('fake_dataset')
+        shutil.rmtree(cls.data_path)
 
     def test__pick_at_intervals__when_max_equals_list_length(self):
         expected = [1, 2, 3, 4]
-        actual = GeneratorUtils.pick_at_intervals(expected, 4)
+        actual = GeneratorUtils.pick_at_intervals(expected, 4, math.floor)
         self.assertEqual(expected, actual)
 
     def test__pick_at_intervals__when_required_elements_less_than_available_using_floor(self):
@@ -72,7 +75,7 @@ class TestGeneratorUtils(TestCase):
             transformations,
             additional_targets={f'image{i}': 'image' for i in range(4)})
         imgs = GeneratorUtils.get_sample_images(sample_path)
-        imgs = [GeneratorUtils.img_to_array(img) for img in imgs]
+        imgs = [GeneratorUtils.process_img(img) for img in imgs]
         expected = transform(image=imgs[0], **{f'image{i}': img for i, img in enumerate(imgs[1:])})
 
         actual = GeneratorUtils.augment(imgs, transformations)
@@ -88,7 +91,7 @@ class TestGeneratorUtils(TestCase):
         transformations = [A.HorizontalFlip(p=1)]
         transform = A.Compose(transformations)
         imgs = GeneratorUtils.get_sample_images(sample_path)
-        imgs = [GeneratorUtils.img_to_array(img) for img in imgs]
+        imgs = [GeneratorUtils.process_img(img) for img in imgs]
 
         actual = GeneratorUtils.augment(imgs, transformations)
 
@@ -106,6 +109,34 @@ class TestGeneratorUtils(TestCase):
 
         transformed = transform(image=imgs[4])
         self.assertTrue(np.array_equal(transformed['image'], actual[4]))
+
+    def test__generate_class_to_label_mapper__when_strategy_is_categorical(self):
+        classes = ['a', 'b', 'c']
+        labels = to_categorical(np.arange(len(classes)))
+        class_to_label_map = dict(zip(classes, labels))
+
+        actual = GeneratorUtils.generate_class_to_label_mapper(
+            classes, 'categorical')
+
+        npt.assert_equal(class_to_label_map, actual)
+
+    def test__generate_class_to_label_mapper__when_strategy_is_binary_with_2_classes(self):
+        classes = ['a', 'b']
+
+        actual = GeneratorUtils.generate_class_to_label_mapper(
+            classes, 'binary')
+
+        npt.assert_equal(desired=[0, 1], actual=actual)
+
+    def test__generate_class_to_label_mapper__when_strategy_is_binary_with_more_than_two_classes(self):
+        with self.assertRaises(Exception):
+            GeneratorUtils.generate_class_to_label_mapper(
+                [0, 1, 2], 'binary')
+
+    def test__generate_class_to_label_mapper__when_strategy_is_neither_binary_nor_categorical(self):
+        with self.assertRaises(ValueError):
+            GeneratorUtils.generate_class_to_label_mapper(
+                [0, 1], 'not a valid strategy')
 
 """
 Creates fake dataset folder

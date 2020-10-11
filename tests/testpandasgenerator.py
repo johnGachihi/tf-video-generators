@@ -1,3 +1,4 @@
+import math
 import unittest
 from pandasgenerator import PandasGenerator
 import pandas as pd
@@ -14,6 +15,7 @@ class TestPandasGenerator(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.data_path = Path('fake_dataset')
         cls.source = pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']])
+        cls.nb_samples = len(cls.source.index)
         generate_fake_dataset(cls.data_path, cls.source)
 
     @classmethod
@@ -26,17 +28,12 @@ class TestPandasGenerator(unittest.TestCase):
 
     def test_when_data_path_non_existent(self):
         with self.assertRaises(FileNotFoundError):
-            PandasGenerator(pd.DataFrame([]), Path('non existent'))
+            PandasGenerator(self.source, Path('non existent'))
 
-    """
-    More tests for PandasGenerator
-
-    Improve the test below.
-    """
-    def test__pandas_generator__yields_correctly(self):
+    def test__pandas_generator__yields_sample_images_correctly(self):
         transformations = [A.HorizontalFlip(p=1)]
         nb_frames = 5
-        batch_size = 1
+        batch_size = self.nb_samples
         gen = PandasGenerator(self.source,
                               self.data_path,
                               batch_size=batch_size,
@@ -46,16 +43,63 @@ class TestPandasGenerator(unittest.TestCase):
         expected = []
         for i in range(1, batch_size + 1):
             imgs = GeneratorUtils.get_sample_images(Path(f'fake_dataset/{i}'))
-            imgs = GeneratorUtils.pick_at_intervals(imgs, nb_frames)
+            imgs = GeneratorUtils.pick_at_intervals(imgs, nb_frames, math.floor)
             imgs = [GeneratorUtils.process_img(img_path)
                     for img_path in imgs]
             imgs = GeneratorUtils.augment(imgs, transformations)
             expected.append(imgs)
         expected = np.stack(expected)
 
-        for sample, _ in gen:
-            npt.assert_equal(actual=sample, desired=expected)
-            break
+        sample, _ = gen.__getitem__(0)
+        npt.assert_equal(actual=sample, desired=expected)
+
+    def test__pandas_generator__batch_size_yielded_as_specified(self):
+        batch_size = self.nb_samples
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=2,
+                              batch_size=batch_size)
+
+        samples, labels = gen.__getitem__(0)
+        self.assertEqual(batch_size, samples.shape[0])
+        self.assertEqual(batch_size, labels.shape[0])
+
+    def test__pandas_generator__nb_frames_yielded_as_specified(self):
+        nb_frames = 2
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=nb_frames,
+                              batch_size=1)
+
+        samples, _ = gen.__getitem__(0)
+        self.assertEqual(nb_frames, samples.shape[1])
+
+    def test__pandas_generator__number_of_batches_yielded(self):
+        batch_size = 2
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=5,
+                              batch_size=batch_size)
+
+        batches = []
+        for samples, _ in gen:
+            batches.append(samples)
+
+        self.assertEqual(math.ceil(self.nb_samples / batch_size), len(batches))
+
+    def test__pandas_generator__labels(self):
+        classes = self.source.loc[:, 1].values.tolist()
+        class_label_map = GeneratorUtils.generate_class_to_label_mapper(
+            classes, 'categorical')
+        expected = list(map(lambda c: class_label_map[c], classes))
+
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=5,
+                              batch_size=self.nb_samples)
+
+        _, labels = gen.__getitem__(0)
+        npt.assert_equal(actual=labels, desired=expected)
 
 
 

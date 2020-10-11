@@ -1,15 +1,17 @@
 import math
 from pathlib import Path
-from PIL import Image
-from numpy import asarray
-from typing import List
+from typing import Tuple
+
 import albumentations as A
+import numpy as np
+from PIL import Image
+from tensorflow.keras.utils import to_categorical
 
 
 class GeneratorUtils:
     @staticmethod
-    def get_sample_images(sample_path: Path) -> List[Path]:
-        return sorted(img for img in sample_path.iterdir())
+    def get_sample_images(sample_path: Path) -> np.array:
+        return np.array(sorted(img for img in sample_path.iterdir()))
 
     @staticmethod
     def pick_at_intervals(A: list, max: int, round_op=None):
@@ -27,8 +29,9 @@ class GeneratorUtils:
         return picked
 
     @staticmethod
-    def img_to_array(img_path: Path):
-        return asarray(Image.open(img_path))
+    def process_img(img_path: Path, size: Tuple[int, int] = (150, 150)):
+        resized_img = Image.open(img_path).resize(size)
+        return np.array(resized_img)
 
     @staticmethod
     def augment(img_arrays, transformations: list):
@@ -43,4 +46,21 @@ class GeneratorUtils:
         for k in additional_targets:
             imgs.append(transformed[k])
 
-        return imgs
+        return np.stack(imgs)
+
+    @staticmethod
+    def generate_class_to_label_mapper(classes: list,
+                                       labelling_strategy: str):
+        if labelling_strategy is 'categorical':
+            labels = to_categorical(np.arange(len(classes)))
+            return dict(zip(classes, labels))
+
+        if labelling_strategy is 'binary':
+            if len(classes) > 2:
+                raise Exception('Binary labelling strategy '
+                                'cannot be used when the number '
+                                'of classes is greater than two')   # greater than two or one
+            return [0, 1]
+
+        raise ValueError(f'{labelling_strategy} is not a '
+                         f'valid labelling strategy.')

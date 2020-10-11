@@ -7,13 +7,15 @@ from generatorutils import GeneratorUtils
 class PandasGenerator(Generator):
     def __init__(
             self,
-            source,
+            source: pd.DataFrame,
             data_path: Path,
             batch_size=5,
             nb_frames=8,
-            transformations=None
+            transformations=None,
+            labelling_strategy='categorical'
     ):
         self.data_path = data_path
+        self.labelling_strategy = labelling_strategy
         super().__init__(source,
                          batch_size=batch_size,
                          nb_frames=nb_frames,
@@ -27,8 +29,11 @@ class PandasGenerator(Generator):
             raise FileNotFoundError('`data_path` not found')
 
     def get_sample_list(self, source: pd.DataFrame):  # Is the source parameter necessary
-        return [[self.data_path / str(sample), label]
-                for [sample, label] in source.values.tolist()]
+        class_label_map = GeneratorUtils.generate_class_to_label_mapper(
+            source.loc[:, 1].values.tolist(), self.labelling_strategy)
+
+        return [[self.data_path / str(sample), class_label_map[_class]]
+                for [sample, _class] in source.values.tolist()]
 
     def process_sample(self, sample: Path):
         img_paths = GeneratorUtils.pick_at_intervals(
@@ -38,4 +43,7 @@ class PandasGenerator(Generator):
         img_arrays = [GeneratorUtils.process_img(img_path)
                       for img_path in img_paths]
 
-        return GeneratorUtils.augment(img_arrays, self.transformations)
+        if self.transformations is None:
+            return img_arrays
+        else:
+            return GeneratorUtils.augment(img_arrays, self.transformations)
