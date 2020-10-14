@@ -146,10 +146,10 @@ class CustomGenerator(Sequence):
         return img_arr
 
     def __augment_imgs(self, imgs):
-        other_targets = {f'image{i + 1}': img for i, img in enumerate(imgs[1:])}
-        transformed = self.augmentor(image=imgs[0], **other_targets)
+        additional_targets = {f'image{i + 1}': img for i, img in enumerate(imgs[1:])}
+        transformed = self.augmentor(image=imgs[0], **additional_targets)
         transformed_imgs = [transformed['image']]
-        for target in other_targets:
+        for target in additional_targets:
             transformed_imgs.append(transformed[target])
         return np.stack(transformed_imgs)
 

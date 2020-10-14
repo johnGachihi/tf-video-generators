@@ -1,7 +1,10 @@
+from typing import List
+
 from generator import Generator
 import pandas as pd
 from pathlib import Path
 from generatorutils import GeneratorUtils
+import os
 
 
 class PandasGenerator(Generator):
@@ -12,14 +15,16 @@ class PandasGenerator(Generator):
             batch_size=5,
             nb_frames=8,
             transformations=None,
-            labelling_strategy='categorical'
+            labelling_strategy='categorical',
+            printer=print
     ):
         self.data_path = data_path
         self.labelling_strategy = labelling_strategy
         super().__init__(source,
                          batch_size=batch_size,
                          nb_frames=nb_frames,
-                         transformations=transformations)
+                         transformations=transformations,
+                         printer=printer)
 
     def assert_source_validity(self, source: pd.DataFrame):
         if not isinstance(source, pd.DataFrame):
@@ -28,12 +33,27 @@ class PandasGenerator(Generator):
         if not self.data_path.exists():
             raise FileNotFoundError('`data_path` not found')
 
-    def get_sample_list(self, source: pd.DataFrame):  # Is the source parameter necessary
+    def get_sample_list(self, source: pd.DataFrame, printer=print):
         class_label_map = GeneratorUtils.generate_class_to_label_mapper(
-            source.loc[:, 1].values.tolist(), self.labelling_strategy)
+            source.iloc[:, 1].values.tolist(), self.labelling_strategy)
 
-        return [[self.data_path / str(sample), class_label_map[_class]]
-                for [sample, _class] in source.values.tolist()]
+        samples = []
+        class_count = {}
+        for [sample, _class] in source.values.tolist():
+            sample_path = self.data_path / str(sample)
+            if len(os.listdir(sample_path)) >= self.nb_frames:
+                samples.append([sample_path, class_label_map[_class]])
+
+            if _class in class_count:
+                class_count[_class] += 1
+            else:
+                class_count[_class] = 1
+
+        printer(f'Sample size: {len(samples)}')
+        for k, v in class_count.items():
+            printer(f'Class {k}: {v}')
+
+        return samples
 
     def process_sample(self, sample: Path):
         img_paths = GeneratorUtils.pick_at_intervals(

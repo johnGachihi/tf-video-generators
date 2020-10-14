@@ -1,5 +1,6 @@
 import math
 import unittest
+from unittest.mock import Mock
 from pandasgenerator import PandasGenerator
 import pandas as pd
 from pathlib import Path
@@ -101,8 +102,50 @@ class TestPandasGenerator(unittest.TestCase):
         _, labels = gen.__getitem__(0)
         npt.assert_equal(actual=labels, desired=expected)
 
+    def test__pandas_generator__ignores_samples_that_have_less_frames_than_nb_frames(self):
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=6,
+                              batch_size=1)
 
+        batches = []
+        for samples, _ in gen:
+            batches.append(samples)
 
+        self.assertEqual(0, len(batches))
+
+    def test__pandas_generator__prints_suitable_samples(self):
+        mock_printer = Mock()
+        gen = PandasGenerator(self.source,
+                              self.data_path,
+                              nb_frames=5,
+                              batch_size=1,
+                              printer=mock_printer)
+
+        mock_printer.assert_any_call(f'Sample size: {self.nb_samples}')
+        mock_printer.assert_any_call(f'Class a: 1')
+        mock_printer.assert_any_call(f'Class b: 1')
+        mock_printer.assert_any_call(f'Class c: 1')
+
+"""
+Creates fake dataset folder
+Structure:
+- fake_dataset
+    - 1
+        - 1.png
+        - 2.png
+        - 3.png
+        - 4.png
+        - 5.png
+    - 2
+        - 1.png
+        - 2.png
+        - 3.png
+        - 4.png
+        - 5.png
+    - 3
+        - ...
+"""
 def generate_fake_dataset(path: Path, labels: pd.DataFrame):
     if not path.exists():
         path.mkdir()
