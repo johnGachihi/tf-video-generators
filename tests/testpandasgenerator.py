@@ -15,7 +15,7 @@ class TestPandasGenerator(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.data_path = Path('fake_dataset')
-        cls.source = pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c']])
+        cls.source = pd.DataFrame([[1, 'a'], [2, 'b'], [3, 'c'], [4, 'c']])
         cls.nb_samples = len(cls.source.index)
         generate_fake_dataset(cls.data_path, cls.source)
 
@@ -89,10 +89,10 @@ class TestPandasGenerator(unittest.TestCase):
         self.assertEqual(math.ceil(self.nb_samples / batch_size), len(batches))
 
     def test__pandas_generator__labels(self):
-        classes = self.source.loc[:, 1].values.tolist()
+        classes = self.source.loc[:, 1].unique()
         class_label_map = GeneratorUtils.generate_class_to_label_mapper(
             classes, 'categorical')
-        expected = list(map(lambda c: class_label_map[c], classes))
+        expected = list(map(lambda c: class_label_map[c], self.source.iloc[:, 1].values))
 
         gen = PandasGenerator(self.source,
                               self.data_path,
@@ -116,16 +116,15 @@ class TestPandasGenerator(unittest.TestCase):
 
     def test__pandas_generator__prints_suitable_samples(self):
         mock_printer = Mock()
-        gen = PandasGenerator(self.source,
-                              self.data_path,
-                              nb_frames=5,
-                              batch_size=1,
-                              printer=mock_printer)
+        PandasGenerator(self.source,
+                        self.data_path,
+                        nb_frames=5,
+                        batch_size=1,
+                        printer=mock_printer)
 
         mock_printer.assert_any_call(f'Sample size: {self.nb_samples}')
-        mock_printer.assert_any_call(f'Class a: 1')
-        mock_printer.assert_any_call(f'Class b: 1')
-        mock_printer.assert_any_call(f'Class c: 1')
+        for _class, count in self.source.iloc[:, 1].value_counts().items():
+            mock_printer.assert_any_call(f'Class {_class}: {count}')
 
 """
 Creates fake dataset folder

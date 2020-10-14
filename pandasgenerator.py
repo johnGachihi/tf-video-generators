@@ -35,7 +35,7 @@ class PandasGenerator(Generator):
 
     def get_sample_list(self, source: pd.DataFrame, printer=print):
         class_label_map = GeneratorUtils.generate_class_to_label_mapper(
-            source.iloc[:, 1].values.tolist(), self.labelling_strategy)
+            source.iloc[:, 1].unique(), self.labelling_strategy)
 
         samples = []
         class_count = {}
