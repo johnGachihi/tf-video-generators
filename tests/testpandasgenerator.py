@@ -35,17 +35,19 @@ class TestPandasGenerator(unittest.TestCase):
         transformations = [A.HorizontalFlip(p=1)]
         nb_frames = 5
         batch_size = self.nb_samples
+        frame_size = (10, 10)
         gen = PandasGenerator(self.source,
                               self.data_path,
                               batch_size=batch_size,
                               nb_frames=nb_frames,
-                              transformations=transformations)
+                              transformations=transformations,
+                              frame_size=frame_size)
 
         expected = []
         for i in range(1, batch_size + 1):
             imgs = GeneratorUtils.get_sample_images(Path(f'fake_dataset/{i}'))
             imgs = GeneratorUtils.pick_at_intervals(imgs, nb_frames, math.floor)
-            imgs = [GeneratorUtils.process_img(img_path)
+            imgs = [GeneratorUtils.process_img(img_path, frame_size)
                     for img_path in imgs]
             imgs = GeneratorUtils.augment(imgs, transformations)
             expected.append(imgs)

@@ -6,12 +6,19 @@ from typing import Tuple
 
 
 class Generator(Sequence):
-    def __init__(self, source, batch_size=5, nb_frames=10, transformations=None, printer=print):
+    def __init__(self,
+                 source,
+                 batch_size=5,
+                 nb_frames=10,
+                 transformations=None,
+                 printer=print,
+                 frame_size=(224, 224)):
         self.assert_source_validity(source)
 
         self.nb_frames = nb_frames
         self.batch_size = batch_size
         self.transformations = transformations
+        self.frame_size = frame_size
         self.samples = self.get_sample_list(source, printer)
 
     @abstractmethod

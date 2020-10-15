@@ -29,7 +29,7 @@ class GeneratorUtils:
         return picked
 
     @staticmethod
-    def process_img(img_path: Path, size: Tuple[int, int] = (150, 150)):
+    def process_img(img_path: Path, size: Tuple[int, int] = (224, 224)):
         resized_img = Image.open(img_path).resize(size)
         return np.array(resized_img)
 

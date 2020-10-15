@@ -16,7 +16,8 @@ class PandasGenerator(Generator):
             nb_frames=8,
             transformations=None,
             labelling_strategy='categorical',
-            printer=print
+            printer=print,
+            frame_size=(224, 224)
     ):
         self.data_path = data_path
         self.labelling_strategy = labelling_strategy
@@ -24,7 +25,8 @@ class PandasGenerator(Generator):
                          batch_size=batch_size,
                          nb_frames=nb_frames,
                          transformations=transformations,
-                         printer=printer)
+                         printer=printer,
+                         frame_size=frame_size)
 
     def assert_source_validity(self, source: pd.DataFrame):
         if not isinstance(source, pd.DataFrame):
@@ -60,7 +62,7 @@ class PandasGenerator(Generator):
             GeneratorUtils.get_sample_images(sample),
             self.nb_frames)  # Add third param
 
-        img_arrays = [GeneratorUtils.process_img(img_path)
+        img_arrays = [GeneratorUtils.process_img(img_path, self.frame_size)
                       for img_path in img_paths]
 
         if self.transformations is None:
