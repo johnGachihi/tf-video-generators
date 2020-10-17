@@ -128,6 +128,15 @@ class TestGeneratorUtils(TestCase):
 
         npt.assert_equal(desired=[0, 1], actual=actual)
 
+    def test__generate_class_to_label_mapper__produces_same_results_with_different_ordering(self):
+        classes_a = ['a', 'b', 'c', 'd']
+        classes_b = ['d', 'a', 'b', 'c']
+
+        npt.assert_equal(
+            GeneratorUtils.generate_class_to_label_mapper(classes_a, 'categorical'),
+            GeneratorUtils.generate_class_to_label_mapper(classes_b, 'categorical')
+        )
+
     def test__generate_class_to_label_mapper__when_strategy_is_binary_with_more_than_two_classes(self):
         with self.assertRaises(Exception):
             GeneratorUtils.generate_class_to_label_mapper(

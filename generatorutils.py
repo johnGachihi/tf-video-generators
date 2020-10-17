@@ -53,13 +53,13 @@ class GeneratorUtils:
                                        labelling_strategy: str):
         if labelling_strategy is 'categorical':
             labels = to_categorical(np.arange(len(classes)))
-            return dict(zip(classes, labels))
+            return dict(zip(sorted(classes), labels))
 
         if labelling_strategy is 'binary':
             if len(classes) > 2:
                 raise Exception('Binary labelling strategy '
                                 'cannot be used when the number '
-                                'of classes is greater than two')   # greater than two or one
+                                'of classes is greater than two')   # greater than two or one?
             return [0, 1]
 
         raise ValueError(f'{labelling_strategy} is not a '

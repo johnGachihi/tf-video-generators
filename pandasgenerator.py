@@ -60,7 +60,7 @@ class PandasGenerator(Generator):
     def process_sample(self, sample: Path):
         img_paths = GeneratorUtils.pick_at_intervals(
             GeneratorUtils.get_sample_images(sample),
-            self.nb_frames)  # Add third param
+            self.nb_frames)  # Add third param - random round op
 
         img_arrays = [GeneratorUtils.process_img(img_path, self.frame_size)
                       for img_path in img_paths]
