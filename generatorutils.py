@@ -31,7 +31,7 @@ class GeneratorUtils:
     @staticmethod
     def process_img(img_path: Path, size: Tuple[int, int] = (224, 224)):
         resized_img = Image.open(img_path).resize(size)
-        return np.array(resized_img)
+        return np.array(resized_img).astype(np.uint16)
 
     @staticmethod
     def augment(img_arrays, transformations: list):
