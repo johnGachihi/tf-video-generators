@@ -36,7 +36,7 @@ class PandasGenerator(Generator):
             raise FileNotFoundError('`data_path` not found')
 
     def get_sample_list(self, source: pd.DataFrame, printer=print):
-        class_label_map = GeneratorUtils.generate_class_to_label_mapper(
+        self.class_label_map = GeneratorUtils.generate_class_to_label_mapper(
             source.iloc[:, 1].unique(), self.labelling_strategy)
 
         samples = []
@@ -44,7 +44,7 @@ class PandasGenerator(Generator):
         for [sample, _class] in source.values.tolist():
             sample_path = self.data_path / str(sample)
             if len(os.listdir(sample_path)) >= self.nb_frames:
-                samples.append([sample_path, class_label_map[_class]])
+                samples.append([sample_path, self.class_label_map[_class]])
 
             if _class in class_count:
                 class_count[_class] += 1

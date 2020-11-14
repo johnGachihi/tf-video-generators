@@ -59,8 +59,10 @@ class GeneratorUtils:
             if len(classes) > 2:
                 raise Exception('Binary labelling strategy '
                                 'cannot be used when the number '
-                                'of classes is greater than two')
-            return [0, 1]
+                                'of classes is greater than two. '
+                                f'{len(classes)} found.')
+
+            return dict(zip(sorted(classes), [0, 1]))
 
         raise ValueError(f'{labelling_strategy} is not a '
                          f'valid labelling strategy.')

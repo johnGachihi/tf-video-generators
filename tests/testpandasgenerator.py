@@ -9,6 +9,7 @@ import albumentations as A
 from generatorutils import GeneratorUtils
 import numpy as np
 import numpy.testing as npt
+from tensorflow.keras.utils import to_categorical
 
 
 class TestPandasGenerator(unittest.TestCase):
@@ -30,6 +31,27 @@ class TestPandasGenerator(unittest.TestCase):
     def test_when_data_path_non_existent(self):
         with self.assertRaises(FileNotFoundError):
             PandasGenerator(self.source, Path('non existent'))
+
+    def test__pandas_generator__labels_for_categorical_labels(self):
+        gen = PandasGenerator(self.source,
+                              self.data_path)
+
+        classes = sorted(self.source.iloc[:, 1].unique())
+        expected = GeneratorUtils.generate_class_to_label_mapper(classes, 'categorical')
+
+        npt.assert_equal(expected, gen.class_label_map)
+
+    def test__pandas_generator__labels_for_binary_labels(self):
+        source = pd.DataFrame([[1, 'a'], [2, 'b']])
+
+        gen = PandasGenerator(source,
+                              self.data_path,
+                              labelling_strategy='binary')
+
+        classes = sorted(source.iloc[:, 1].unique())
+        expected = GeneratorUtils.generate_class_to_label_mapper(classes, 'binary')
+
+        npt.assert_equal(expected, gen.class_label_map)
 
     def test__pandas_generator__yields_sample_images_correctly(self):
         transformations = [A.HorizontalFlip(p=1)]
@@ -116,7 +138,7 @@ class TestPandasGenerator(unittest.TestCase):
 
         self.assertEqual(0, len(batches))
 
-    def test__pandas_generator__prints_suitable_samples(self):
+    def test__pandas_generator__prints_sample_stats(self):
         mock_printer = Mock()
         PandasGenerator(self.source,
                         self.data_path,
