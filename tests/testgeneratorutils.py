@@ -126,16 +126,7 @@ class TestGeneratorUtils(TestCase):
         actual = GeneratorUtils.generate_class_to_label_mapper(
             classes, 'binary')
 
-        npt.assert_equal(desired=[0, 1], actual=actual)
-
-    def test__generate_class_to_label_mapper__produces_same_results_with_different_ordering(self):
-        classes_a = ['a', 'b', 'c', 'd']
-        classes_b = ['d', 'a', 'b', 'c']
-
-        npt.assert_equal(
-            GeneratorUtils.generate_class_to_label_mapper(classes_a, 'categorical'),
-            GeneratorUtils.generate_class_to_label_mapper(classes_b, 'categorical')
-        )
+        npt.assert_equal(desired={'a': 0, 'b': 1}, actual=actual)
 
     def test__generate_class_to_label_mapper__when_strategy_is_binary_with_more_than_two_classes(self):
         with self.assertRaises(Exception):
@@ -146,6 +137,25 @@ class TestGeneratorUtils(TestCase):
         with self.assertRaises(ValueError):
             GeneratorUtils.generate_class_to_label_mapper(
                 [0, 1], 'not a valid strategy')
+
+    def test__generate_class_to_label_mapper__produces_same_results_with_different_ordering_for_categorical(self):
+        classes_a = ['a', 'b', 'c', 'd']
+        classes_b = ['d', 'a', 'b', 'c']
+
+        npt.assert_equal(
+            GeneratorUtils.generate_class_to_label_mapper(classes_a, 'categorical'),
+            GeneratorUtils.generate_class_to_label_mapper(classes_b, 'categorical')
+        )
+
+    def test__generate_class_to_label_mapper__produces_same_results_with_different_ordering_for_binary(self):
+        classes_a = ['a', 'b']
+        classes_b = ['b', 'a']
+
+        npt.assert_equal(
+            GeneratorUtils.generate_class_to_label_mapper(classes_a, 'binary'),
+            GeneratorUtils.generate_class_to_label_mapper(classes_b, 'binary')
+        )
+
 
 """
 Creates fake dataset folder
