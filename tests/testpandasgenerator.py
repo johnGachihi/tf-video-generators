@@ -1,15 +1,16 @@
 import math
-import unittest
-from unittest.mock import Mock
-from pandasgenerator import PandasGenerator
-import pandas as pd
-from pathlib import Path
 import shutil
+import unittest
+from pathlib import Path
+from unittest.mock import Mock
+
 import albumentations as A
-from generatorutils import GeneratorUtils
 import numpy as np
 import numpy.testing as npt
-from tensorflow.keras.utils import to_categorical
+import pandas as pd
+
+from generatorutils import GeneratorUtils
+from pandasgenerator import PandasGenerator
 
 
 class TestPandasGenerator(unittest.TestCase):

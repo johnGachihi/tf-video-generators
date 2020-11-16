@@ -1,8 +1,5 @@
-import math
 from abc import abstractmethod
 from tensorflow.keras.utils import Sequence
-import numpy as np
-from typing import Tuple
 
 
 class Generator(Sequence):
@@ -10,14 +7,12 @@ class Generator(Sequence):
                  source,
                  batch_size=5,
                  nb_frames=10,
-                 transformations=None,
                  printer=print,
                  frame_size=(224, 224)):
         self.assert_source_validity(source)
 
         self.nb_frames = nb_frames
         self.batch_size = batch_size
-        self.transformations = transformations
         self.frame_size = frame_size
         self.samples = self.get_sample_list(source, printer)
 
@@ -47,14 +42,7 @@ class Generator(Sequence):
         pass
 
     def __len__(self):
-        return math.ceil(len(self.samples) / self.batch_size)
+        pass
 
-    def __getitem__(self, idx) -> Tuple[np.array, np.array]:
-        batch_samples = self.samples[idx * self.batch_size :
-                                     (idx+1) * self.batch_size]
-        X, y = [], []
-        for sample, label in batch_samples:
-            X.append(self.process_sample(sample))
-            y.append(label)
-
-        return np.array(X), np.array(y)
+    def __getitem__(self, idx):
+        pass

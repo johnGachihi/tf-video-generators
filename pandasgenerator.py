@@ -1,13 +1,14 @@
-from typing import List
-
-from generator import Generator
-import pandas as pd
-from pathlib import Path
-from generatorutils import GeneratorUtils
 import os
+from pathlib import Path
+
+import pandas as pd
+
+import pandasgeneratorutils
+from generatorutils import GeneratorUtils
+from traingenerator import TrainGenerator
 
 
-class PandasGenerator(Generator):
+class PandasGenerator(TrainGenerator):
     def __init__(
             self,
             source: pd.DataFrame,
@@ -58,14 +59,5 @@ class PandasGenerator(Generator):
         return samples
 
     def process_sample(self, sample: Path):
-        img_paths = GeneratorUtils.pick_at_intervals(
-            GeneratorUtils.get_sample_images(sample),
-            self.nb_frames)  # Add third param - random round op
-
-        img_arrays = [GeneratorUtils.process_img(img_path, self.frame_size)
-                      for img_path in img_paths]
-
-        if self.transformations is None:
-            return img_arrays
-        else:
-            return GeneratorUtils.augment(img_arrays, self.transformations)
+        return pandasgeneratorutils.process_sample(
+            sample, self.nb_frames, self.frame_size, self.transformations)
