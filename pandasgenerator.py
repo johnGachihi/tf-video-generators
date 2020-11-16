@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 import pandasgeneratorutils
 from generatorutils import GeneratorUtils
@@ -18,7 +19,8 @@ class PandasGenerator(TrainGenerator):
             transformations=None,
             labelling_strategy='categorical',
             printer=print,
-            frame_size=(224, 224)
+            frame_size=(224, 224),
+            dtype=np.uint8
     ):
         self.data_path = data_path
         self.labelling_strategy = labelling_strategy
@@ -27,7 +29,8 @@ class PandasGenerator(TrainGenerator):
                          nb_frames=nb_frames,
                          transformations=transformations,
                          printer=printer,
-                         frame_size=frame_size)
+                         frame_size=frame_size,
+                         dtype=dtype)
 
     def assert_source_validity(self, source: pd.DataFrame):
         if not isinstance(source, pd.DataFrame):
@@ -60,4 +63,4 @@ class PandasGenerator(TrainGenerator):
 
     def process_sample(self, sample: Path):
         return pandasgeneratorutils.process_sample(
-            sample, self.nb_frames, self.frame_size, self.transformations)
+            sample, self.nb_frames, self.frame_size, self.dtype, self.transformations)

@@ -29,9 +29,12 @@ class GeneratorUtils:
         return picked
 
     @staticmethod
-    def process_img(img_path: Path, size: Tuple[int, int] = (224, 224)):
+    def process_img(img_path: Path, size: Tuple[int, int] = (224, 224), dtype=np.uint8):
         resized_img = Image.open(img_path).resize(size)
-        return np.array(resized_img).astype(np.float32)
+        if dtype is np.uint8:
+            return np.array(resized_img)
+        else:
+            return np.array(resized_img).astype(dtype)
 
     @staticmethod
     def augment(img_arrays, transformations: list):

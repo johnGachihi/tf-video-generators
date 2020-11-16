@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from tensorflow.keras.utils import Sequence
+import numpy as np
 
 
 class Generator(Sequence):
@@ -8,12 +9,14 @@ class Generator(Sequence):
                  batch_size=5,
                  nb_frames=10,
                  printer=print,
-                 frame_size=(224, 224)):
+                 frame_size=(224, 224),
+                 dtype=np.uint8):
         self.assert_source_validity(source)
 
         self.nb_frames = nb_frames
         self.batch_size = batch_size
         self.frame_size = frame_size
+        self.dtype = dtype
         self.samples = self.get_sample_list(source, printer)
 
     @abstractmethod

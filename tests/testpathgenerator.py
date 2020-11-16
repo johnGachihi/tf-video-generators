@@ -37,12 +37,12 @@ class TestGenerator(unittest.TestCase):
 
         os.remove('example.txt')
 
-    def test_get_sample_list_len(self):
-        gen = PathGenerator(Path('../assets/fake_dataset'), batch_size=3)
-        self.assertEqual(math.ceil((3*5) / 3), gen.__len__())
-
-    def test_path_generator(self):
-        gen = PathGenerator(Path('../assets/fake_dataset'), batch_size=3)
+    # def test_get_sample_list_len(self):
+    #     gen = PathGenerator(Path('../assets/fake_dataset'), batch_size=3)
+    #     self.assertEqual(math.ceil((3*5) / 3), gen.__len__())
+    #
+    # def test_path_generator(self):
+    #     gen = PathGenerator(Path('../assets/fake_dataset'), batch_size=3)
         # for/
 
 

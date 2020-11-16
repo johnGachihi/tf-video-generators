@@ -1,16 +1,15 @@
+import math
+import shutil
 from pathlib import Path
 from unittest import TestCase
-from generatorutils import GeneratorUtils
-import math
-import pandas as pd
-import shutil
-from PIL import Image
-import numpy as np
-from numpy import asarray
-import numpy.testing as npt
+
 import albumentations as A
+import numpy as np
+import numpy.testing as npt
+import pandas as pd
 from tensorflow.keras.utils import to_categorical
 
+from generatorutils import GeneratorUtils
 
 
 class TestGeneratorUtils(TestCase):
@@ -60,6 +59,19 @@ class TestGeneratorUtils(TestCase):
         img = GeneratorUtils.process_img(img_path, (10, 10))
 
         self.assertIsInstance(img, np.ndarray)
+
+    def test__process_img__returns_img_in_specified_type(self):
+        # Default
+        img_path = Path('fake_dataset/1/1.png')
+        img = GeneratorUtils.process_img(img_path, (10, 10))
+
+        self.assertEqual(img.dtype, np.uint8)
+
+        # Not default
+        img_path = Path('fake_dataset/1/1.png')
+        img = GeneratorUtils.process_img(img_path, (10, 10), dtype=np.uint32)
+
+        self.assertEqual(img.dtype, np.uint32)
 
     def test__augment_imgs__returns_numpy_array(self):
         imgs = GeneratorUtils.get_sample_images(Path('fake_dataset/1'))

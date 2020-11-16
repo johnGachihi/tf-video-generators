@@ -47,7 +47,7 @@ class TestPandasGeneratorUtils(unittest.TestCase):
                     for img_path in img_paths]
         expected = GeneratorUtils.augment(img_arrays, transformations)
 
-        actual = process_sample(self.fake_sample, nb_frames, frame_size, transformations)
+        actual = process_sample(self.fake_sample, nb_frames, frame_size, transformations=transformations)
 
         npt.assert_equal(desired=expected, actual=actual)
 

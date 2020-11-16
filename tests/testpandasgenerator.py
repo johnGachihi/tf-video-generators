@@ -151,6 +151,13 @@ class TestPandasGenerator(unittest.TestCase):
         for _class, count in self.source.iloc[:, 1].value_counts().items():
             mock_printer.assert_any_call(f'Class {_class}: {count}')
 
+    def test__pandas_generator__returns_data_of_specified_type(self):
+        gen = PandasGenerator(self.source, self.data_path, nb_frames=3, dtype=np.uint32)
+
+        self.assertEqual('uint32', gen.__getitem__(0)[0].dtype)
+
+
+
 """
 Creates fake dataset folder
 Structure:
